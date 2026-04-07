@@ -9,7 +9,7 @@
     ·
     <a href="#使用示例"><strong>使用示例</strong></a>
     ·
-    <a href="#工作流说明"><strong>工作流说明</strong></a>
+    <a href="#项目结构"><strong>项目结构</strong></a>
     ·
     <a href="#风险与建议"><strong>风险与建议</strong></a>
   </p>
@@ -17,18 +17,20 @@
 
 > [!IMPORTANT]
 > 本项目主要面向中文区个人整理场景，README 以中文为主。
-> 
-> 脚本支持 **先模拟、后执行、可回滚** 的工作流。为了避免误整理，强烈建议第一次使用时先运行 `--dry-run`。
+>
+> 当前仓库已经整理为 **包入口 + 单一核心实现** 的结构，目的是提升可读性、减少重复代码带来的维护风险。
 
 ## 项目定位
 
-这个脚本不是单纯“按文件后缀搬文件”的工具，而是一个偏**归档整理工作流**的命令行脚本，目标是：
+这是一个偏个人工作流的漫画归档整理工具，重点不是“功能堆满”，而是把最常见、最容易出错的整理流程收敛成一个**可预览、可执行、可回滚**的命令行工具。
 
-- 尽量减少手工搬运
-- 在中文命名环境下提升归类效率
-- 对重复文件做隔离，而不是直接覆盖
-- 对疑似重复内容保留人工确认空间
-- 让每次整理都能追踪、复盘、回滚
+核心目标：
+
+- 减少手工搬运
+- 提升中文命名环境下的归类效率
+- 对重复 / 疑似重复内容做隔离处理
+- 保留历史记录与回滚能力
+- 尽量降低误整理带来的破坏性
 
 ## 核心能力
 
@@ -62,32 +64,47 @@
 - `mobi`
 - `azw3`
 
+## 安装与运行
+
+### 直接运行
+
+```bash
+python3 -m comic_organizer <目录路径>
+```
+
+### 或使用脚本入口
+
+如果你本地以源码方式运行，也可以：
+
+```bash
+python3 -m comic_organizer.cli <目录路径>
+```
+
 <a id="快速开始"></a>
 ## 快速开始
 
-### 1. 直接运行交互菜单
+### 1. 先做一次模拟执行
 
 ```bash
-python3 comic_organizer.py <目录路径>
+python3 -m comic_organizer D:\Comics --scan-mode safe --dry-run
 ```
 
-运行后可在菜单中选择：
-- 安全整理
-- 修历史归档
-- 全量重扫
-- 回滚上一次执行
-- 查看历史执行记录
-
-### 2. 先做一次模拟执行
+### 2. 确认计划后再正式执行
 
 ```bash
-python3 comic_organizer.py <目录路径> --scan-mode safe --dry-run
+python3 -m comic_organizer D:\Comics --scan-mode safe --execute --yes
 ```
 
-### 3. 确认结果后再正式执行
+### 3. 查看历史执行记录
 
 ```bash
-python3 comic_organizer.py <目录路径> --scan-mode safe --execute --yes
+python3 -m comic_organizer D:\Comics --list-sessions
+```
+
+### 4. 回滚最近一次正式执行
+
+```bash
+python3 -m comic_organizer D:\Comics --rollback latest
 ```
 
 ## 使用示例
@@ -95,7 +112,7 @@ python3 comic_organizer.py <目录路径> --scan-mode safe --execute --yes
 ### 示例一：日常整理根目录中的新文件
 
 ```bash
-python3 comic_organizer.py D:\Comics --scan-mode safe --dry-run
+python3 -m comic_organizer D:\Comics --scan-mode safe --dry-run
 ```
 
 适合：
@@ -105,7 +122,7 @@ python3 comic_organizer.py D:\Comics --scan-mode safe --dry-run
 ### 示例二：修补历史归档
 
 ```bash
-python3 comic_organizer.py D:\Comics --scan-mode repair --dry-run
+python3 -m comic_organizer D:\Comics --scan-mode repair --dry-run
 ```
 
 适合：
@@ -115,25 +132,12 @@ python3 comic_organizer.py D:\Comics --scan-mode repair --dry-run
 ### 示例三：正式执行安全整理
 
 ```bash
-python3 comic_organizer.py D:\Comics --scan-mode safe --execute --yes
+python3 -m comic_organizer D:\Comics --scan-mode safe --execute --yes
 ```
 
-### 示例四：查看历史执行记录
-
-```bash
-python3 comic_organizer.py D:\Comics --list-sessions
-```
-
-### 示例五：回滚最近一次正式执行
-
-```bash
-python3 comic_organizer.py D:\Comics --rollback latest
-```
-
-<a id="工作流说明"></a>
 ## 工作流说明
 
-推荐使用顺序：
+推荐顺序：
 
 1. `safe + dry-run`
 2. 检查整理计划是否符合预期
@@ -159,15 +163,13 @@ python3 comic_organizer.py D:\Comics --rollback latest
 
 ## 目录与状态说明
 
-脚本会使用以下目录 / 文件：
-
 | 路径 / 名称 | 用途 |
 | --- | --- |
 | `未分类归档` | 无法识别归类目标时的落点 |
 | `疑似重复待确认` | 标题高度相似、需要人工确认的文件 |
 | `重复区` | 检测为重复文件时的落点 |
 | `.history/` | 保存每次执行的计划、状态与日志 |
-| `整理日志.txt` | 日志文件名常量（实际日志会保存到历史会话目录） |
+| `整理日志.txt` | 日志文件名常量（实际日志保存在历史会话目录） |
 
 ## 识别逻辑概述
 
@@ -178,12 +180,35 @@ python3 comic_organizer.py D:\Comics --rollback latest
 - 字面标题
 - 模糊匹配已有目录名
 
-同时会结合以下信息判断重复与疑似重复：
+同时结合以下信息判断重复与疑似重复：
 
 - 文件大小
 - 快速哈希
 - 完整哈希
 - 归一化标题键
+
+<a id="项目结构"></a>
+## 项目结构
+
+```text
+.
+├── comic_organizer/
+│   ├── __init__.py
+│   ├── __main__.py
+│   ├── cli.py
+│   └── core.py
+├── README.md
+├── README.zh-CN.md
+├── pyproject.toml
+└── .gitignore
+```
+
+### 结构说明
+
+- `comic_organizer/core.py`：核心实现，作为单一事实来源
+- `comic_organizer/cli.py`：精简入口，避免重复维护整份逻辑
+- `comic_organizer/__main__.py`：支持 `python -m comic_organizer`
+- `pyproject.toml`：项目元数据与脚本入口配置
 
 ## 一次整理后大致会变成什么样
 
@@ -197,15 +222,6 @@ Comics/
 ├── 重复区/
 │   └── [社团B]/
 └── 其他系列目录...
-```
-
-## 当前仓库结构
-
-```text
-.
-├── comic_organizer.py
-├── README.md
-└── .gitignore
 ```
 
 <a id="风险与建议"></a>
@@ -222,12 +238,12 @@ Comics/
 
 脚本支持基于历史会话回滚，但前提是：
 - 历史记录存在
-- 相关文件路径没有被后续手动改乱
+- 相关文件路径没有被后续手工改乱
 
 所以最稳的方式仍然是：
 - 先模拟
 - 再执行
-- 不要在执行后立刻手工大改目录结构
+- 不要在执行后立刻大改目录结构
 
 ## 适合什么人
 
@@ -239,14 +255,8 @@ Comics/
 
 ## 后续计划
 
-- 拆分为更清晰的多模块项目结构
+- 继续拆分模块，提高可测试性
 - 补充测试样例与示例目录
 - 增加配置文件支持
 - 增加更细粒度的忽略规则
 - 优化 Windows 使用体验
-
-## 说明
-
-这是一个偏个人工作流的整理工具。
-
-它的重点不是“做成一个花哨的大而全软件”，而是把最常见、最痛苦、最容易出错的整理流程，收敛成一个可重复执行的脚本工具。
