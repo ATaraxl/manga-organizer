@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "comic-organizer"
+version = "0.1.0"
+description = "Comic archive and ebook organizer with dry-run, rollback, duplicate detection, and session history."
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [
+  { name = "ATaraxl" }
+]
+license = { text = "Proprietary" }
+keywords = ["comic", "organizer", "ebook", "archive", "cli"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.10",
+  "Environment :: Console",
+  "Topic :: Utilities"
+]
+
+[project.scripts]
+comic-organizer = "comic_organizer.cli:main"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+include = ["comic_organizer*"]
